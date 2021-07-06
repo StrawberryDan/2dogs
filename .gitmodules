@@ -1,3 +1,6 @@
 [submodule "linear-algebra"]
 	path = linear-algebra
 	url = https://github.com/StrawberryDan/linear-algebra.git
+[submodule "loguru"]
+	path = loguru
+	url = https://github.com/emilk/loguru.git

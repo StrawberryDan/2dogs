@@ -1,26 +1,36 @@
 #include "Window.hpp"
 
 #include <GLFW/glfw3.h>
+#include <loguru/loguru.hpp>
 
 static std::atomic_uint         INSTANCE_COUNT(0);
 static std::atomic<GLFWwindow*> CURRENT_CONTEXT(nullptr);
 
+#define GLFW_INIT \
+    if (INSTANCE_COUNT == 0) if (glfwInit() != GLFW_TRUE) { \
+        LOG_F(FATAL, "Unable to load GLFW3!");                \
+    }
+
+#define GLFW_TERMINATE \
+    if (INSTANCE_COUNT == 0) glfwTerminate();
+
 namespace Graphics {
     Window::Window(): title("No Title") {
-        // Make sure GLFW is initialised
-        if (INSTANCE_COUNT++ == 0) glfwInit();
+        GLFW_INIT;
         context = glfwCreateWindow(800, 600, title.c_str(), nullptr, nullptr);
+        INSTANCE_COUNT++;
     }
 
     Window::Window(std::string title): title(title) {
-        // Make sure GLFW is initialised
-        if (INSTANCE_COUNT++ == 0) glfwInit();
+        GLFW_INIT;
         context = glfwCreateWindow(800, 600, title.c_str(), nullptr, nullptr);
+        INSTANCE_COUNT++;
     }
 
     Window::Window(unsigned int width, unsigned int height, std::string title): title(title) {
-        if (INSTANCE_COUNT++ == 0) glfwInit();        
+        GLFW_INIT;
         context = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+        INSTANCE_COUNT++;
     }
 
     Window::Window(const Window &other) {
@@ -61,7 +71,8 @@ namespace Graphics {
     Window::~Window() {
         if (CURRENT_CONTEXT == context) CURRENT_CONTEXT = nullptr;
         if (context) glfwDestroyWindow(context);
-        if (--INSTANCE_COUNT == 0) glfwTerminate();
+        INSTANCE_COUNT--;
+        GLFW_TERMINATE;
     }
 
     void Window::MakeCurrent() {

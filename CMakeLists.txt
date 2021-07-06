@@ -5,5 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 enable_testing()
 
+add_library(loguru STATIC loguru/loguru.cpp loguru/loguru.hpp)
 add_subdirectory(linear-algebra)
 add_subdirectory(graphics)
