@@ -4,3 +4,6 @@
 [submodule "loguru"]
 	path = loguru
 	url = https://github.com/emilk/loguru.git
+[submodule "gl3w"]
+	path = gl3w
+	url = https://github.com/skaslev/gl3w.git
