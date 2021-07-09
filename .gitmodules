@@ -1,9 +1,9 @@
 [submodule "linear-algebra"]
-	path = linear-algebra
+	path = lib/linear-algebra
 	url = https://github.com/StrawberryDan/linear-algebra.git
 [submodule "loguru"]
-	path = loguru
+	path = lib/loguru
 	url = https://github.com/emilk/loguru.git
 [submodule "gl3w"]
-	path = gl3w
+	path = lib/gl3w
 	url = https://github.com/skaslev/gl3w.git
