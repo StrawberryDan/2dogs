@@ -17,6 +17,5 @@ target_include_directories(graphics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(graphics PUBLIC gl3w glfw linear-algebra loguru)
 
 add_executable(graphics-test Test.cpp)
-target_link_libraries(graphics-test PRIVATE graphics)
-
+target_link_libraries(graphics-test PRIVATE graphics Catch2::Catch2)
 add_test(NAME graphics-test COMMAND graphics-test)
