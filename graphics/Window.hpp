@@ -10,6 +10,16 @@ using namespace LinearAlgebra;
 struct GLFWwindow;
 
 namespace Graphics {
+    struct WindowSettings {
+        Vec2i size;
+        std::string title;
+        bool fullscreen;
+        bool resizable;
+        bool terminate_on_close;
+
+        WindowSettings();
+    };
+
     /**
      * Platform independant window and OpenGL context.
      */
@@ -18,16 +28,14 @@ namespace Graphics {
         /// Mutex to access
         mutable std::shared_mutex mutex;
         /// Display title of the window
-        std::string title;
+        WindowSettings settings;
         /// Internal handle to the window
         GLFWwindow *context;
     public:
         /// Creates the window with default values
         Window();
-        /// Creates the window with a specified title and default size.
-        Window(std::string title);
-        /// Creates the window with specified size and title
-        Window(unsigned int width, unsigned int height, std::string title);
+        /// Creates using the specified settings.
+        Window(WindowSettings settings);
         /// Copys another window creating a new identical one
         Window(const Window&);
         /// Copies another window and terminates current one
@@ -62,5 +70,13 @@ namespace Graphics {
 
         /// Controls whether the operating system requests the window to close.
         bool ShouldClose() const;
+
+    private:
+        /// Creates the backend of the window using the loaded settings.
+        void Create();  
+        /// Destroys a window.
+        void Terminate();
+        /// Callback to run terminate if the close button is pressed.
+        static void DefaultCloseCallback(GLFWwindow *window);
     };
 }

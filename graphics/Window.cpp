@@ -3,10 +3,12 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <loguru/loguru.hpp>
+#include <map>
 
 static std::atomic_bool         GL_FUNCTIONS_LOADED(false);
 static std::atomic_uint         INSTANCE_COUNT(0);
-static std::atomic<GLFWwindow*> CURRENT_CONTEXT(nullptr);
+static std::atomic<Graphics::Window*> CURRENT_CONTEXT(nullptr);
+static std::map<GLFWwindow*, Graphics::Window*> REGISTERED_WINDOWS;
 
 #define GLFW_INIT \
     if (INSTANCE_COUNT == 0) if (glfwInit() != GLFW_TRUE) { \
@@ -20,51 +22,48 @@ static std::atomic<GLFWwindow*> CURRENT_CONTEXT(nullptr);
     if (INSTANCE_COUNT == 0) glfwTerminate();
 
 namespace Graphics {
-    Window::Window(): title("No Title") {
+    WindowSettings::WindowSettings() :
+        size{800, 600},
+        title("Window"),
+        fullscreen(false),
+        resizable(false),
+        terminate_on_close(true)
+        {}
+
+    Window::Window(): settings() {
         GLFW_INIT;
-        context = glfwCreateWindow(800, 600, title.c_str(), nullptr, nullptr);
+        Create();
         INSTANCE_COUNT++;
     }
 
-    Window::Window(std::string title): title(title) {
+    Window::Window(WindowSettings settings): settings(settings) {
         GLFW_INIT;
-        context = glfwCreateWindow(800, 600, title.c_str(), nullptr, nullptr);
+        Create();
         INSTANCE_COUNT++;
     }
 
-    Window::Window(unsigned int width, unsigned int height, std::string title): title(title) {
-        GLFW_INIT;
-        context = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-        INSTANCE_COUNT++;
-    }
-
-    Window::Window(const Window &other) {
+    Window::Window(const Window &other): settings(other.settings) {
         std::shared_lock lk(other.mutex);
-        title = other.title;
-        auto size = other.GetSize();
-        context = glfwCreateWindow(size[0], size[1], title.c_str(), nullptr, nullptr);
+        Create();
         INSTANCE_COUNT++;
     }
 
     Window &Window::operator=(const Window &other) {
         std::unique_lock lk1(mutex);
         std::shared_lock lk2(other.mutex);
-        if (context) { glfwDestroyWindow(context); INSTANCE_COUNT--; }
-        title = other.title;
-        auto size = other.GetSize();
-        context = glfwCreateWindow(size[0], size[1], title.c_str(), nullptr, nullptr);
-        INSTANCE_COUNT++;
+        if (context) glfwDestroyWindow(context);
+        settings = other.settings;
+        Create();
         return *this;
     }
 
-    Window::Window(Window &&other) {
+    Window::Window(Window &&other): settings(other.settings) {
         std::shared_lock lk(other.mutex);
         // Swap out contexts
         // (Other should not be glfwDestroyWindow'd since it is nullptr)
+        other.settings = WindowSettings();
         context = other.context;
         other.context = nullptr;
-        title = other.title;
-        other.title = std::string();
     }
 
     Window &Window::operator=(Window &&other) {
@@ -74,22 +73,28 @@ namespace Graphics {
         if (context) { glfwDestroyWindow(context); INSTANCE_COUNT--; }
         context = other.context;
         other.context = nullptr;
-        title = other.title;
-        other.title = std::string();
+        settings = other.settings;
+        other.settings = WindowSettings();
         return *this;
     }
 
     Window::~Window() {
         std::unique_lock lk(mutex);
-        if (CURRENT_CONTEXT == context) CURRENT_CONTEXT = nullptr;
-        if (context) glfwDestroyWindow(context);
+        Terminate();
         INSTANCE_COUNT--;
         GLFW_TERMINATE;
     }
 
+    void Window::Terminate() {
+        REGISTERED_WINDOWS.erase(context);
+        if (CURRENT_CONTEXT == this) CURRENT_CONTEXT = nullptr;
+        if (context) glfwDestroyWindow(context);
+        context = nullptr;
+    }
+
     void Window::MakeCurrent() {
         std::unique_lock lk(mutex);
-        if (context) { glfwMakeContextCurrent(context); CURRENT_CONTEXT = context; }
+        if (context) { glfwMakeContextCurrent(context); CURRENT_CONTEXT = this; }
         if (!GL_FUNCTIONS_LOADED) { 
             gl3wInit();
             GL_FUNCTIONS_LOADED = true;
@@ -98,7 +103,7 @@ namespace Graphics {
 
     bool Window::IsCurrent() const {
         std::shared_lock lk(mutex);
-        return (context != nullptr && CURRENT_CONTEXT == context);
+        return (context != nullptr && CURRENT_CONTEXT == this);
     }
 
     Vec2i Window::GetSize() const {
@@ -114,23 +119,23 @@ namespace Graphics {
 
     void Window::SetSize(Vec2i size) {
         std::unique_lock lk(mutex);
-        glfwSetWindowSize(context, size[0], size[1]);
+        if (context) glfwSetWindowSize(context, size[0], size[1]);
     }
 
     std::string Window::GetTitle() const {
         std::shared_lock lk(mutex);
-        return title;
+        return settings.title;
     }
 
     void Window::SetTitle(std::string title) {
         std::unique_lock lk(mutex);
-        this->title = title;
-        glfwSetWindowTitle(context, title.c_str());
+        settings.title = title;
+        if (context) glfwSetWindowTitle(context, title.c_str());
     }
 
     void Window::SwapBuffers() {
         std::unique_lock lk(mutex);
-        glfwSwapBuffers(context);
+        if (context) glfwSwapBuffers(context);
     }
 
     void Window::PollEvents() {
@@ -138,6 +143,25 @@ namespace Graphics {
     }
 
     bool Window::ShouldClose() const {
-        return glfwWindowShouldClose(context);
+        if (context) return glfwWindowShouldClose(context);
+        return true;
+    }
+
+    void Window::Create() {
+        context = glfwCreateWindow(
+            settings.size[0], settings.size[1],
+            settings.title.c_str(),
+            settings.fullscreen ? glfwGetPrimaryMonitor() : nullptr,
+            nullptr);
+
+        REGISTERED_WINDOWS[context] = this;
+
+        if (settings.terminate_on_close) {
+            glfwSetWindowCloseCallback(context, Window::DefaultCloseCallback);
+        }
+    }
+
+    void Window::DefaultCloseCallback(GLFWwindow *window) {
+        REGISTERED_WINDOWS[window]->Terminate();
     }
 }

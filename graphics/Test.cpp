@@ -5,7 +5,7 @@
 #include <graphics/Window.hpp>
 
 TEST_CASE("Create Window") {
-    Graphics::Window win("Test Window");
+    Graphics::Window win;
     win.MakeCurrent();
     while (!win.ShouldClose()) { 
         win.PollEvents();
@@ -15,9 +15,9 @@ TEST_CASE("Create Window") {
 }
 
 TEST_CASE("Multiple Windows") {
-    Graphics::Window win1("Test Window 1");
-    Graphics::Window win2("Test Window 2");
-    Graphics::Window win3("Test Window 3");
+    Graphics::Window win1;
+    Graphics::Window win2;
+    Graphics::Window win3;
 
     while (!(win1.ShouldClose() && win2.ShouldClose() && win3.ShouldClose())) {
         win1.MakeCurrent();
