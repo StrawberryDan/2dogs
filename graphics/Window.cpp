@@ -13,21 +13,20 @@ static std::map<GLFWwindow*, Graphics::Window*> REGISTERED_WINDOWS;
 #define GLFW_INIT \
     if (INSTANCE_COUNT == 0) if (glfwInit() != GLFW_TRUE) { \
         LOG_F(FATAL, "Unable to load GLFW3!");              \
-    }                                                       \
-                                                            \
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);          \
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);          
+    }                                                       
+        
 
 #define GLFW_TERMINATE \
     if (INSTANCE_COUNT == 0) glfwTerminate();
 
 namespace Graphics {
-    WindowSettings::WindowSettings() :
+    Window::Settings::Settings() :
         size{800, 600},
         title("Window"),
         fullscreen(false),
         resizable(false),
-        terminate_on_close(true)
+        terminate_on_close(true),
+        lock_aspect_ratio(true)
         {}
 
     Window::Window(): settings() {
@@ -36,7 +35,7 @@ namespace Graphics {
         INSTANCE_COUNT++;
     }
 
-    Window::Window(WindowSettings settings): settings(settings) {
+    Window::Window(Window::Settings settings): settings(settings) {
         GLFW_INIT;
         Create();
         INSTANCE_COUNT++;
@@ -61,7 +60,7 @@ namespace Graphics {
         std::shared_lock lk(other.mutex);
         // Swap out contexts
         // (Other should not be glfwDestroyWindow'd since it is nullptr)
-        other.settings = WindowSettings();
+        other.settings = Settings();
         context = other.context;
         other.context = nullptr;
     }
@@ -74,7 +73,7 @@ namespace Graphics {
         context = other.context;
         other.context = nullptr;
         settings = other.settings;
-        other.settings = WindowSettings();
+        other.settings = Settings();
         return *this;
     }
 
@@ -148,6 +147,10 @@ namespace Graphics {
     }
 
     void Window::Create() {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);          
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);  
+        glfwWindowHint(GLFW_RESIZABLE, settings.resizable ? GLFW_TRUE : GLFW_FALSE);
+    
         context = glfwCreateWindow(
             settings.size[0], settings.size[1],
             settings.title.c_str(),
@@ -155,6 +158,8 @@ namespace Graphics {
             nullptr);
 
         REGISTERED_WINDOWS[context] = this;
+
+        glfwSetWindowAspectRatio(context, settings.size[0], settings.size[1]);
 
         if (settings.terminate_on_close) {
             glfwSetWindowCloseCallback(context, Window::DefaultCloseCallback);

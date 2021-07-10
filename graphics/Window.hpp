@@ -10,32 +10,34 @@ using namespace LinearAlgebra;
 struct GLFWwindow;
 
 namespace Graphics {
-    struct WindowSettings {
-        Vec2i size;
-        std::string title;
-        bool fullscreen;
-        bool resizable;
-        bool terminate_on_close;
-
-        WindowSettings();
-    };
-
     /**
      * Platform independant window and OpenGL context.
      */
     class Window {
+    public:
+        struct Settings {
+            Vec2i size;
+            std::string title;
+            bool fullscreen;
+            bool resizable;
+            bool terminate_on_close;
+            bool lock_aspect_ratio;
+
+            Settings();
+        };
+        
     private:
         /// Mutex to access
         mutable std::shared_mutex mutex;
         /// Display title of the window
-        WindowSettings settings;
+        Settings settings;
         /// Internal handle to the window
         GLFWwindow *context;
     public:
         /// Creates the window with default values
         Window();
         /// Creates using the specified settings.
-        Window(WindowSettings settings);
+        Window(Settings settings);
         /// Copys another window creating a new identical one
         Window(const Window&);
         /// Copies another window and terminates current one
