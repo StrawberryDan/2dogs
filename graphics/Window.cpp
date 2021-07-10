@@ -78,7 +78,8 @@ namespace Graphics {
     }
 
     Window::~Window() {
-        std::unique_lock lk(mutex);
+        std::unique_lock lk1(mutex);
+        std::unique_lock lk2(context_mutex);
         Terminate();
         INSTANCE_COUNT--;
         GLFW_TERMINATE;
@@ -92,7 +93,7 @@ namespace Graphics {
     }
 
     void Window::MakeCurrent() {
-        std::unique_lock lk(mutex);
+        std::unique_lock lk(context_mutex);
         if (context) { glfwMakeContextCurrent(context); CURRENT_CONTEXT = this; }
         if (!GL_FUNCTIONS_LOADED) { 
             gl3wInit();
@@ -100,9 +101,13 @@ namespace Graphics {
         }
     }
 
-    bool Window::IsCurrent() const {
-        std::shared_lock lk(mutex);
+    bool Window::IsCurrentContext() const {
         return (context != nullptr && CURRENT_CONTEXT == this);
+    }
+
+    std::unique_lock<std::mutex> Window::LockContext() {
+        if (!IsCurrentContext()) MakeCurrent();
+        return std::move( std::unique_lock(context_mutex) );
     }
 
     Vec2i Window::GetSize() const {

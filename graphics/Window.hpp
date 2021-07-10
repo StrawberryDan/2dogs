@@ -25,10 +25,12 @@ namespace Graphics {
 
             Settings();
         };
-        
+
     private:
-        /// Mutex to access
+        /// Mutex to access window properties
         mutable std::shared_mutex mutex;
+        /// Mutex for OpenGL Context
+        mutable std::mutex context_mutex;
         /// Display title of the window
         Settings settings;
         /// Internal handle to the window
@@ -52,7 +54,11 @@ namespace Graphics {
         /// Makes this window the context for all following OpenGL functions until the next call to this method.
         void MakeCurrent();
         /// Returns whether this window is the current OpenGL context.
-        bool IsCurrent() const;
+        bool IsCurrentContext() const;
+        /// Aquire a lock on the the window. Makes the window the current context if not already.
+        /// Prevents the context from changing midway through an OpenGL operation if used.
+        /// You may ignore this in a single threaded application.
+        std::unique_lock<std::mutex> LockContext();
 
         /// Returns the size of this window.
         Vec2i GetSize() const;
