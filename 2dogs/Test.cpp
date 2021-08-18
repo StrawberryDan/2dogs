@@ -2,7 +2,7 @@
 
 #include <GL/gl3w.h>
 #include <loguru.h>
-#include <graphics/Window.hpp>
+#include <2dogs/Window.hpp>
 
 TEST_CASE("Create Window") {
     Graphics::Window win;
