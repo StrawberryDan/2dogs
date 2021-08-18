@@ -1,12 +1,12 @@
 [submodule "linear-algebra"]
-	path = lib/linear-algebra
+	path = third_party/linear-algebra
 	url = https://github.com/StrawberryDan/linear-algebra.git
 [submodule "loguru"]
-	path = lib/loguru
+	path = third_party/loguru
 	url = https://github.com/emilk/loguru.git
 [submodule "gl3w"]
-	path = lib/gl3w
+	path = third_party/gl3w
 	url = https://github.com/skaslev/gl3w.git
 [submodule "lib/Catch2"]
-	path = lib/Catch2
+	path = third_party/Catch2
 	url = https://github.com/catchorg/Catch2.git
