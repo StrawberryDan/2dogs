@@ -3,6 +3,10 @@
 #include <GL/gl3w.h>
 #include <loguru.h>
 #include <graphics/Window.hpp>
+#include <graphics/Image.hpp>
+#include <graphics/Texture.hpp>
+#include <filesystem>
+#include <iostream>
 
 TEST_CASE("Create Window") {
     Graphics::Window win;
@@ -38,6 +42,21 @@ TEST_CASE("Multiple Windows") {
     }
 }
 
+TEST_CASE("Image Loading") {
+	std::cout << std::filesystem::current_path() << std::endl;
+	Graphics::Image img("testdata/test.png");
+	REQUIRE(img.get_width() == 738);
+	REQUIRE(img.get_height() == 669);
+}
+
+TEST_CASE("Texture Loading") {
+	Graphics::Window win;
+	win.MakeCurrent();
+	Graphics::Image img("testdata/test.png");
+	Graphics::Texture tex(img);
+	tex.bind();
+	REQUIRE(glGetError() == GL_NO_ERROR);
+}
 
 int main(int argc, const char **argv) {
     auto session = Catch::Session();

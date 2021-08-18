@@ -27,6 +27,9 @@ namespace Graphics {
 		/// Loads an image from a file.
 		Image(const char *file);
 		inline Image(const std::string &file): Image(file.c_str()) {}
+
+		inline unsigned int get_width() const { return width; }
+		inline unsigned int get_height() const { return height; }
 		
 		/// Pixel color getter.
 		Color pixel(unsigned int x, unsigned int y) const;

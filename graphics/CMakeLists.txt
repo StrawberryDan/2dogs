@@ -23,4 +23,4 @@ add_dependencies(graphics graphics-docs)
 
 add_executable(graphics-test Test.cpp)
 target_link_libraries(graphics-test PRIVATE graphics Catch2::Catch2)
-add_test(NAME graphics-test COMMAND graphics-test)
+catch_discover_tests(graphics-test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
